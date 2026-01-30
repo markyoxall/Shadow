@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/Blazor/">
+    <Project Path="Shadow.BlazorSpa/Shadow.BlazorSpa.Bff/Shadow.BlazorSpa.Bff.csproj" />
+    <Project Path="Shadow.BlazorSpa/Shadow.BlazorSpa.Client/Shadow.BlazorSpa.Client.csproj" />
+  </Folder>
+  <Project Path="Shadow.Identity/Shadow.Identity.csproj" />
+</Solution>
