@@ -171,14 +171,14 @@ stages:
           - script: |
               echo "🚀 Deploying to PRODUCTION environment"
               echo "Function URL: https://funkygibbon-func-apdgf3gycegeates.ukwest-01.azurewebsites.net"
-              echo "This is your existing production function!"
             displayName: 'Production Deployment Info'
 
-          # TODO: Uncomment when ready for production deployment
-          # - task: AzureFunctionApp@1
-          #   displayName: 'Deploy Function to Production'
-          #   inputs:
-          #     azureSubscription: 'YOUR_AZURE_SUBSCRIPTION'
-          #     appType: 'functionApp'
-          #     appName: 'funkygibbon-func'
-          #     package: '$(Pipeline.Workspace)/drop/function/**/*.zip'
+          # Deploy Azure Function to Production
+          - task: AzureFunctionApp@1
+            displayName: 'Deploy Function to Production'
+            inputs:
+              azureSubscription: 'Azure-Shadow-Production'
+              appType: 'functionApp'
+              appName: 'funkygibbon-func'
+              package: '$(Pipeline.Workspace)/drop/function/**/*.zip'
+              deploymentMethod: 'auto'
