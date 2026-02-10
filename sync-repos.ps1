@@ -38,25 +38,25 @@ Write-Host ""
 Write-Host "✅ Committed successfully!" -ForegroundColor Green
 Write-Host ""
 
-# Push to Azure DevOps (origin)
-Write-Host "🚀 Pushing to Azure DevOps (origin)..." -ForegroundColor Yellow
-git push origin master
-
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "❌ Failed to push to Azure DevOps" -ForegroundColor Red
-    exit 1
-}
-
-Write-Host "✅ Pushed to Azure DevOps!" -ForegroundColor Green
-Write-Host ""
-
-# Push to GitHub
-Write-Host "🚀 Pushing to GitHub..." -ForegroundColor Yellow
+# Push to GitHub first (triggers CI/CD pipeline)
+Write-Host "🚀 Pushing to GitHub (triggers pipeline)..." -ForegroundColor Yellow
 git push github master
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "❌ Failed to push to GitHub" -ForegroundColor Red
-    Write-Host "⚠️  Changes were committed and pushed to Azure DevOps, but GitHub sync failed." -ForegroundColor Yellow
+    exit 1
+}
+
+Write-Host "✅ Pushed to GitHub!" -ForegroundColor Green
+Write-Host ""
+
+# Push to Azure DevOps (backup, no pipeline trigger)
+Write-Host "🚀 Pushing to Azure DevOps (backup)..." -ForegroundColor Yellow
+git push origin master
+
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "❌ Failed to push to Azure DevOps" -ForegroundColor Red
+    Write-Host "⚠️  Changes were committed and pushed to GitHub, but Azure DevOps sync failed." -ForegroundColor Yellow
     exit 1
 }
 

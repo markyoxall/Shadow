@@ -1,0 +1,103 @@
+# Azure Pipelines CI/CD for Shadow Portfolio
+# Triggers on push to GitHub main/master branch
+
+trigger:
+  branches:
+    include:
+      - master
+      - main
+
+pool:
+  vmImage: 'windows-latest'
+
+variables:
+  solution: '**/*.sln'
+  buildPlatform: 'Any CPU'
+  buildConfiguration: 'Release'
+
+stages:
+- stage: Build
+  displayName: 'Build and Test'
+  jobs:
+  - job: BuildJob
+    displayName: 'Build Solution'
+    steps:
+    
+    # Install .NET 10 SDK
+    - task: UseDotNet@2
+      displayName: 'Install .NET 10 SDK'
+      inputs:
+        packageType: 'sdk'
+        version: '10.x'
+    
+    # Restore NuGet packages
+    - task: DotNetCoreCLI@2
+      displayName: 'Restore NuGet Packages'
+      inputs:
+        command: 'restore'
+        projects: '$(solution)'
+    
+    # Build solution
+    - task: DotNetCoreCLI@2
+      displayName: 'Build Solution'
+      inputs:
+        command: 'build'
+        projects: '$(solution)'
+        arguments: '--configuration $(buildConfiguration) --no-restore'
+    
+    # Run tests (when you add them)
+    - task: DotNetCoreCLI@2
+      displayName: 'Run Tests'
+      inputs:
+        command: 'test'
+        projects: '**/*Tests/*.csproj'
+        arguments: '--configuration $(buildConfiguration) --no-build'
+      continueOnError: true  # Don't fail if no tests exist yet
+    
+    # Publish Blazor Client
+    - task: DotNetCoreCLI@2
+      displayName: 'Publish Blazor WebAssembly'
+      inputs:
+        command: 'publish'
+        publishWebProjects: false
+        projects: '**/Shadow.BlazorSpa.Bff/*.csproj'
+        arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/blazor'
+        zipAfterPublish: true
+    
+    # Publish Azure Function
+    - task: DotNetCoreCLI@2
+      displayName: 'Publish Azure Function'
+      inputs:
+        command: 'publish'
+        publishWebProjects: false
+        projects: '**/Shadow.FunkyGibbon/*.csproj'
+        arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/function'
+        zipAfterPublish: true
+    
+    # Publish build artifacts
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish Artifacts'
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+        ArtifactName: 'drop'
+        publishLocation: 'Container'
+
+# Optional: Add deployment stage (uncomment when ready)
+# - stage: Deploy
+#   displayName: 'Deploy to Azure'
+#   dependsOn: Build
+#   condition: succeeded()
+#   jobs:
+#   - deployment: DeployFunction
+#     displayName: 'Deploy Azure Function'
+#     environment: 'production'
+#     strategy:
+#       runOnce:
+#         deploy:
+#           steps:
+#           - task: AzureFunctionApp@1
+#             inputs:
+#               azureSubscription: 'Your-Azure-Subscription'
+#               appType: 'functionApp'
+#               appName: 'funkygibbon-func'
+#               package: '$(Pipeline.Workspace)/drop/function/**/*.zip'
