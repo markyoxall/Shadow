@@ -1,4 +1,6 @@
+using Duende.Bff;
 using Duende.Bff.Blazor;
+using Fluxor;
 using Shadow.BlazorSpa;
 using Shadow.BlazorSpa.Bff.Components;
 
@@ -18,6 +20,12 @@ builder.Services.AddBff()
 // Register an abstraction for retrieving weather forecasts that can run on the server. 
 // On the client, in WASM, this will be retrieved via an HTTP call to the server.
 builder.Services.AddSingleton<IWeatherClient, ServerWeatherClient>();
+
+// Add Fluxor for pre-rendering support with state persistence
+builder.Services.AddFluxor(options =>
+{
+    options.ScanAssemblies(typeof(Shadow.BlazorSpa.Client._Imports).Assembly);
+});
 
 // Configure the authentication
 builder.Services.AddAuthentication(options =>
@@ -52,7 +60,7 @@ builder.Services.AddAuthentication(options =>
         options.Scope.Add("openid");
         options.Scope.Add("profile");
         // request the API scope that IdentityServer exposes for this sample
-        options.Scope.Add("scope2");
+        options.Scope.Add("remote_api");
         options.Scope.Add("offline_access");
 
         options.TokenValidationParameters.NameClaimType = "name";
@@ -105,8 +113,7 @@ app.UseBff();
 app.UseAuthorization();
 app.UseAntiforgery();
 
-// Add the BFF management endpoints, such as login, logout, etc.
-app.MapBffManagementEndpoints();
+
 
 app.MapStaticAssets();
 app.MapRazorComponents<App>()

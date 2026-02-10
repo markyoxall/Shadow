@@ -3,6 +3,7 @@
     <Project Path="Shadow.BlazorSpa/Shadow.BlazorSpa.Bff/Shadow.BlazorSpa.Bff.csproj" />
     <Project Path="Shadow.BlazorSpa/Shadow.BlazorSpa.Client/Shadow.BlazorSpa.Client.csproj" />
   </Folder>
+  <Project Path="Shadow.FastEndpoints/Shadow.FastEndpoints.csproj" />
   <Project Path="Shadow.FunkyGibbon/Shadow.FunkyGibbon.csproj" Id="20a5e836-0703-4ada-b24c-2a3fb86f82ef" />
   <Project Path="Shadow.Identity/Shadow.Identity.csproj" />
 </Solution>

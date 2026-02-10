@@ -11,7 +11,7 @@ builder.ConfigureFunctionsWebApplication();
 builder.Services
     .AddApplicationInsightsTelemetryWorkerService()
     .ConfigureFunctionsApplicationInsights();
-// Register exception handling middleware to log unhandled exceptions from functions
+
 builder.Services.AddSingleton<IFunctionsWorkerMiddleware, Shadow.FunkyGibbon.ExceptionHandlingMiddleware>();
 
 builder.Build().Run();

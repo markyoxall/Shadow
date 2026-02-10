@@ -1,0 +1,6 @@
+@Shadow.FastEndpoints_HostAddress = http://localhost:5253
+
+GET {{Shadow.FastEndpoints_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

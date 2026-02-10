@@ -1,7 +1,7 @@
 @page "/weather"
 @using Microsoft.AspNetCore.Authorization
 @inject IWeatherClient WeatherClient
-@rendermode InteractiveAuto
+@rendermode InteractiveWebAssembly
 
 @attribute [Authorize]
 
@@ -10,7 +10,9 @@
 <h1>Weather</h1>
 
 <p>This component demonstrates showing data.</p>
-
+<p style="color:red;font-weight:bold">
+    Rendering mode: @(OperatingSystem.IsBrowser() ? "WASM" : "Server")
+</p>
 @if (_forecasts == null)
 {
     <p><em>Loading...</em></p>
@@ -41,11 +43,16 @@ else
 }
 
 @code {
-    private WeatherForecast[]? _forecasts;
+
+    [PersistentState(AllowUpdates = true)]
+    public WeatherForecast[]? _forecasts { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-         _forecasts = await WeatherClient.GetWeatherForecasts();
+        if (_forecasts is null)
+        {
+            _forecasts = await WeatherClient.GetWeatherForecasts();
+        }
     }
 
 }

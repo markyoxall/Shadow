@@ -1,0 +1,41 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shadow.FunkyGibbon", "Shadow.FunkyGibbon.csproj", "{3085B738-99EF-098E-6D07-31AB77485948}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "obj", "obj", "{CA285D67-BB6D-2923-29FD-B5A1C6B8EB24}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Debug", "Debug", "{3DB07252-4F5B-61B7-192E-6C40720DF607}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "net10.0", "net10.0", "{EBD43A96-7B92-702B-7428-8B5AA1B20724}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WorkerExtensions", "obj\Debug\net10.0\WorkerExtensions\WorkerExtensions.csproj", "{D7F68042-2533-68D7-2ABC-B6D1BD57D460}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3085B738-99EF-098E-6D07-31AB77485948}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3085B738-99EF-098E-6D07-31AB77485948}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3085B738-99EF-098E-6D07-31AB77485948}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3085B738-99EF-098E-6D07-31AB77485948}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D7F68042-2533-68D7-2ABC-B6D1BD57D460}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D7F68042-2533-68D7-2ABC-B6D1BD57D460}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D7F68042-2533-68D7-2ABC-B6D1BD57D460}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D7F68042-2533-68D7-2ABC-B6D1BD57D460}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{3DB07252-4F5B-61B7-192E-6C40720DF607} = {CA285D67-BB6D-2923-29FD-B5A1C6B8EB24}
+		{EBD43A96-7B92-702B-7428-8B5AA1B20724} = {3DB07252-4F5B-61B7-192E-6C40720DF607}
+		{D7F68042-2533-68D7-2ABC-B6D1BD57D460} = {EBD43A96-7B92-702B-7428-8B5AA1B20724}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {1AADF7C5-C62E-45A1-99BF-879538EBBDBB}
+	EndGlobalSection
+EndGlobal
