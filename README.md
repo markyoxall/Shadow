@@ -96,6 +96,8 @@ Serverless backend for asynchronous operations
 - **Azure Functions** - Serverless compute
 - **Azure Blob Storage** - Cloud storage for data persistence
 - **SendGrid** - Email delivery service
+- **Azure Pipelines** - Automated CI/CD with multi-stage deployments
+- **GitHub Integration** - Webhook-triggered builds on every commit
 - **CORS** - Secure cross-origin resource sharing
 
 ### Architectural Patterns
