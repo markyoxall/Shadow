@@ -1,5 +1,5 @@
 # Azure Pipelines CI/CD for Shadow Portfolio
-# Triggers on push to GitHub main/master branch
+# Multi-stage pipeline: Build → Test → Deploy (Test/Staging/Production)
 
 trigger:
   branches:
@@ -11,59 +11,70 @@ pool:
   vmImage: 'windows-latest'
 
 variables:
-  solution: '**/*.sln'
-  buildPlatform: 'Any CPU'
   buildConfiguration: 'Release'
 
 stages:
-- stage: Build
+# ═══════════════════════════════════════════════════════════
+# STAGE 1: BUILD & TEST
+# ═══════════════════════════════════════════════════════════
+- stage: BuildAndTest
   displayName: 'Build and Test'
   jobs:
-  - job: BuildJob
-    displayName: 'Build Solution'
+  - job: Build
+    displayName: 'Build & Run Tests'
     steps:
-    
+
     # Install .NET 10 SDK
     - task: UseDotNet@2
       displayName: 'Install .NET 10 SDK'
       inputs:
         packageType: 'sdk'
         version: '10.x'
-    
-    # Restore NuGet packages
+
+    # Restore dependencies
     - task: DotNetCoreCLI@2
-      displayName: 'Restore NuGet Packages'
+      displayName: 'Restore Dependencies'
       inputs:
         command: 'restore'
-        projects: '$(solution)'
-    
-    # Build solution
+        projects: '**/*.csproj'
+
+    # Build all projects
     - task: DotNetCoreCLI@2
-      displayName: 'Build Solution'
+      displayName: 'Build All Projects'
       inputs:
         command: 'build'
-        projects: '$(solution)'
+        projects: '**/*.csproj'
         arguments: '--configuration $(buildConfiguration) --no-restore'
-    
-    # Run tests (when you add them)
+
+    # Run unit tests
     - task: DotNetCoreCLI@2
-      displayName: 'Run Tests'
+      displayName: 'Run Unit Tests'
       inputs:
         command: 'test'
         projects: '**/*Tests/*.csproj'
-        arguments: '--configuration $(buildConfiguration) --no-build'
-      continueOnError: true  # Don't fail if no tests exist yet
-    
-    # Publish Blazor Client
+        arguments: '--configuration $(buildConfiguration) --no-build --logger trx --collect:"XPlat Code Coverage"'
+        publishTestResults: true
+
+    # Publish test results
+    - task: PublishTestResults@2
+      displayName: 'Publish Test Results'
+      condition: succeededOrFailed()
+      inputs:
+        testResultsFormat: 'VSTest'
+        testResultsFiles: '**/*.trx'
+        mergeTestResults: true
+        failTaskOnFailedTests: true
+
+    # Publish Blazor App
     - task: DotNetCoreCLI@2
-      displayName: 'Publish Blazor WebAssembly'
+      displayName: 'Publish Blazor App'
       inputs:
         command: 'publish'
         publishWebProjects: false
         projects: '**/Shadow.BlazorSpa.Bff/*.csproj'
         arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/blazor'
         zipAfterPublish: true
-    
+
     # Publish Azure Function
     - task: DotNetCoreCLI@2
       displayName: 'Publish Azure Function'
@@ -73,31 +84,101 @@ stages:
         projects: '**/Shadow.FunkyGibbon/*.csproj'
         arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/function'
         zipAfterPublish: true
-    
-    # Publish build artifacts
+
+    # Publish artifacts
     - task: PublishBuildArtifacts@1
-      displayName: 'Publish Artifacts'
+      displayName: 'Publish Build Artifacts'
       inputs:
         PathtoPublish: '$(Build.ArtifactStagingDirectory)'
         ArtifactName: 'drop'
         publishLocation: 'Container'
 
-# Optional: Add deployment stage (uncomment when ready)
-# - stage: Deploy
-#   displayName: 'Deploy to Azure'
-#   dependsOn: Build
-#   condition: succeeded()
-#   jobs:
-#   - deployment: DeployFunction
-#     displayName: 'Deploy Azure Function'
-#     environment: 'production'
-#     strategy:
-#       runOnce:
-#         deploy:
-#           steps:
-#           - task: AzureFunctionApp@1
-#             inputs:
-#               azureSubscription: 'Your-Azure-Subscription'
-#               appType: 'functionApp'
-#               appName: 'funkygibbon-func'
-#               package: '$(Pipeline.Workspace)/drop/function/**/*.zip'
+# ═══════════════════════════════════════════════════════════
+# STAGE 2: DEPLOY TO TEST ENVIRONMENT
+# ═══════════════════════════════════════════════════════════
+- stage: DeployTest
+  displayName: 'Deploy to Test'
+  dependsOn: BuildAndTest
+  condition: succeeded()
+  jobs:
+  - deployment: DeployTestEnvironment
+    displayName: 'Deploy to Test Environment'
+    environment: 'shadow-test'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - script: |
+              echo "🧪 Deploying to TEST environment"
+              echo "Function URL: https://funkygibbon-test.azurewebsites.net"
+              echo "⚠️ Configure Azure resources first!"
+            displayName: 'Test Deployment Info'
+
+          # TODO: Uncomment when Test Azure resources are ready
+          # - task: AzureFunctionApp@1
+          #   displayName: 'Deploy Function to Test'
+          #   inputs:
+          #     azureSubscription: 'YOUR_AZURE_SUBSCRIPTION'
+          #     appType: 'functionApp'
+          #     appName: 'funkygibbon-test'
+          #     package: '$(Pipeline.Workspace)/drop/function/**/*.zip'
+
+# ═══════════════════════════════════════════════════════════
+# STAGE 3: DEPLOY TO STAGING
+# ═══════════════════════════════════════════════════════════
+- stage: DeployStaging
+  displayName: 'Deploy to Staging'
+  dependsOn: DeployTest
+  condition: succeeded()
+  jobs:
+  - deployment: DeployStagingEnvironment
+    displayName: 'Deploy to Staging Environment'
+    environment: 'shadow-staging'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - script: |
+              echo "📦 Deploying to STAGING environment"
+              echo "Function URL: https://funkygibbon-staging.azurewebsites.net"
+              echo "⚠️ Configure Azure resources first!"
+            displayName: 'Staging Deployment Info'
+
+          # TODO: Uncomment when Staging Azure resources are ready
+          # - task: AzureFunctionApp@1
+          #   displayName: 'Deploy Function to Staging'
+          #   inputs:
+          #     azureSubscription: 'YOUR_AZURE_SUBSCRIPTION'
+          #     appType: 'functionApp'
+          #     appName: 'funkygibbon-staging'
+          #     package: '$(Pipeline.Workspace)/drop/function/**/*.zip'
+
+# ═══════════════════════════════════════════════════════════
+# STAGE 4: DEPLOY TO PRODUCTION
+# ═══════════════════════════════════════════════════════════
+- stage: DeployProduction
+  displayName: 'Deploy to Production'
+  dependsOn: DeployStaging
+  condition: succeeded()
+  jobs:
+  - deployment: DeployProductionEnvironment
+    displayName: 'Deploy to Production Environment'
+    environment: 'shadow-production'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - script: |
+              echo "🚀 Deploying to PRODUCTION environment"
+              echo "Function URL: https://funkygibbon-func-apdgf3gycegeates.ukwest-01.azurewebsites.net"
+              echo "This is your existing production function!"
+            displayName: 'Production Deployment Info'
+
+          # TODO: Uncomment when ready for production deployment
+          # - task: AzureFunctionApp@1
+          #   displayName: 'Deploy Function to Production'
+          #   inputs:
+          #     azureSubscription: 'YOUR_AZURE_SUBSCRIPTION'
+          #     appType: 'functionApp'
+          #     appName: 'funkygibbon-func'
+          #     package: '$(Pipeline.Workspace)/drop/function/**/*.zip'
