@@ -89,6 +89,13 @@ builder.Services.AddCascadingAuthenticationState();
 
 builder.Services.AddAuthorization();
 
+// Register a typed HttpClient for FastEndpoints API (used by BFF to proxy requests)
+builder.Services.AddHttpClient("FastEndpoints", client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["FastEndpoints:BaseUrl"] ?? "https://localhost:5001");
+    client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

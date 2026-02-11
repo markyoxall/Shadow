@@ -24,6 +24,11 @@ builder.Services.AddSingleton<IWeatherClient>(sp => sp.GetRequiredService<Weathe
 
 builder.Services.AddLocalApiHttpClient<WeatherClient>();
 
+// Register Notes client that talks to the BFF proxy
+// Notes client registered - uses the BFF proxy via Local API
+builder.Services.AddScoped<INotesClient, NotesClient>();
+builder.Services.AddLocalApiHttpClient<NotesClient>();
+
 var host = builder.Build();
 
 // Initialize Fluxor store before running

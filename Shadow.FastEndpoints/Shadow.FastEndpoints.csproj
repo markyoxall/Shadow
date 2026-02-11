@@ -12,13 +12,14 @@
     <PackageReference Include="FastEndpoints.Messaging.Core" Version="7.2.0" />
     <PackageReference Include="FastEndpoints.Swagger" Version="7.2.0" />
     <PackageReference Include="FastEndpoints.Testing" Version="7.2.0" />
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.2" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.3" />
     <!-- Orleans and EF Core (Postgres) for portfolio example -->
-    <PackageReference Include="Microsoft.Orleans.Server" Version="8.0.5" />
-    <PackageReference Include="Microsoft.Orleans.Hosting" Version="8.0.5" />
-    <PackageReference Include="Microsoft.Orleans.Hosting.AspNetCore" Version="8.0.5" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.4" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.2" />
+    <PackageReference Include="Microsoft.Orleans.Server" Version="10.0.1" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.3">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
 </Project>
