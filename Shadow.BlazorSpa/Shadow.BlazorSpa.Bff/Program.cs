@@ -96,6 +96,9 @@ builder.Services.AddHttpClient("FastEndpoints", client =>
     client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
 });
 
+// Register Notes client proxy so server components can inject INotesClient
+builder.Services.AddScoped<INotesClient, Shadow.BlazorSpa.Bff.Services.NotesClientProxy>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

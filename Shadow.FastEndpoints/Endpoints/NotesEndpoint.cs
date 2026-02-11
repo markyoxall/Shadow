@@ -6,7 +6,7 @@ using Shadow.FastEndpoints.Orleans;
 
 namespace Shadow.FastEndpoints.Endpoints;
 
-public class NotesEndpoint : EndpointWithoutRequest
+public class NotesEndpoint : EndpointWithoutRequest<Note>
 {
     private readonly IGrainFactory _grainFactory;
 
@@ -27,7 +27,8 @@ public class NotesEndpoint : EndpointWithoutRequest
         var idStr = Route<string>("id");
         if (!Guid.TryParse(idStr, out var id))
         {
-            await SendErrorsAsync("Invalid id", 400, ct);
+            HttpContext.Response.StatusCode = 400;
+            await HttpContext.Response.WriteAsync("Invalid id", ct);
             return;
         }
 
@@ -36,15 +37,26 @@ public class NotesEndpoint : EndpointWithoutRequest
         if (HttpContext.Request.Method == "GET")
         {
             var note = await grain.GetAsync();
-            if (note == null) return await SendNotFoundAsync(ct);
-            await SendAsync(note, cancellation: ct);
+            if (note == null)
+            {
+                HttpContext.Response.StatusCode = 404;
+                return;
+            }
+            HttpContext.Response.ContentType = "application/json";
+            await HttpContext.Response.WriteAsJsonAsync(note, cancellationToken: ct);
             return;
         }
 
         // POST
         var noteReq = await HttpContext.Request.ReadFromJsonAsync<Note>(cancellationToken: ct);
-        if (noteReq == null) return await SendErrorsAsync("Invalid body", 400, ct);
+        if (noteReq == null)
+        {
+            HttpContext.Response.StatusCode = 400;
+            await HttpContext.Response.WriteAsync("Invalid body", ct);
+            return;
+        }
         await grain.SetAsync(noteReq);
-        await SendAsync(noteReq, cancellation: ct);
+        HttpContext.Response.ContentType = "application/json";
+        await HttpContext.Response.WriteAsJsonAsync(noteReq, cancellationToken: ct);
     }
 }

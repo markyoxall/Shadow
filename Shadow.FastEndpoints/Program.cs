@@ -79,7 +79,8 @@ public class Program
         {
             app.UseDeveloperExceptionPage();
             app.UseOpenApi();
-            app.UseSwaggerUi3();
+            // FastEndpoints.Swagger integrates with FastEndpoints - Map OpenAPI UI endpoint
+            app.MapGet("/swagger", () => Results.Redirect("/swagger/index.html"));
         }
 
         app.UseHttpsRedirection();
