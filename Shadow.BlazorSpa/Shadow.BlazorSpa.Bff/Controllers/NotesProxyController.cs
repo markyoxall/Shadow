@@ -7,10 +7,12 @@ namespace Shadow.BlazorSpa.Bff.Controllers;
 public class NotesProxyController : ControllerBase
 {
     private readonly IHttpClientFactory _httpFactory;
+    private readonly ILogger<NotesProxyController> _logger;
 
-    public NotesProxyController(IHttpClientFactory httpFactory)
+    public NotesProxyController(IHttpClientFactory httpFactory, ILogger<NotesProxyController> logger)
     {
         _httpFactory = httpFactory;
+        _logger = logger;
     }
 
     [HttpGet("{id:guid}")]
@@ -31,7 +33,19 @@ public class NotesProxyController : ControllerBase
     public async Task<IActionResult> Post(Guid id)
     {
         var client = _httpFactory.CreateClient("FastEndpoints");
+        // Log incoming headers to inspect CSRF / antiforgery headers from the client
+        try
+        {
+            var headers = Request.Headers.Select(h => $"{h.Key}:{string.Join(';', h.Value)}");
+            _logger.LogInformation("Incoming POST /bff/notes/{Id} headers: {Headers}", id, string.Join(" | ", headers));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to read request headers for /bff/notes/{Id}", id);
+        }
+
         var body = await new StreamReader(Request.Body).ReadToEndAsync();
+        _logger.LogDebug("Incoming POST /bff/notes/{Id} body: {Body}", id, body);
         var resp = await client.PostAsync($"/notes/{id}", new StringContent(body, System.Text.Encoding.UTF8, "application/json"));
         var content = await resp.Content.ReadAsStringAsync();
         return new ContentResult

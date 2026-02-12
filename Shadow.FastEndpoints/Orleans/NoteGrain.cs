@@ -1,6 +1,7 @@
 using Orleans;
 using System.Threading.Tasks;
 using Shadow.FastEndpoints.Data;
+using Shadow.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace Shadow.FastEndpoints.Orleans
@@ -14,14 +15,14 @@ namespace Shadow.FastEndpoints.Orleans
             _dbFactory = dbFactory;
         }
 
-        public async Task<Note?> GetAsync()
+        public async Task<Shadow.FastEndpoints.Data.Note?> GetAsync()
         {
             using var db = _dbFactory.CreateDbContext();
             var id = this.GetPrimaryKey();
             return await db.Notes.FindAsync(id);
         }
 
-        public async Task SetAsync(Note note)
+        public async Task SetAsync(Shadow.FastEndpoints.Data.Note note)
         {
             using var db = _dbFactory.CreateDbContext();
             note.Id = this.GetPrimaryKey();

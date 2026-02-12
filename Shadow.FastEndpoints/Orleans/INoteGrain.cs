@@ -6,7 +6,7 @@ namespace Shadow.FastEndpoints.Orleans
 {
     public interface INoteGrain : IGrainWithGuidKey
     {
-        Task<Note?> GetAsync();
-        Task SetAsync(Note note);
+        Task<Shadow.FastEndpoints.Data.Note?> GetAsync();
+        Task SetAsync(Shadow.FastEndpoints.Data.Note note);
     }
 }

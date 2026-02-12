@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Shadow.BlazorSpa.Client\Shadow.BlazorSpa.Client.csproj" />
+    <ProjectReference Include="..\..\Shadow.Shared\Shadow.Shared.csproj" />
   </ItemGroup>
 
 </Project>

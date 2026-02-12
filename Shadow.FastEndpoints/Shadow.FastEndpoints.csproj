@@ -22,4 +22,8 @@
     </PackageReference>
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Shadow.Shared\Shadow.Shared.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -3,6 +3,7 @@ using Duende.Bff.Blazor;
 using Fluxor;
 using Shadow.BlazorSpa;
 using Shadow.BlazorSpa.Bff.Components;
+using Shadow.Shared.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 // Ensure referenced Blazor WebAssembly static assets are available to the host
@@ -26,6 +27,9 @@ builder.Services.AddFluxor(options =>
 {
     options.ScanAssemblies(typeof(Shadow.BlazorSpa.Client._Imports).Assembly);
 });
+
+// Add controllers so proxy controller endpoints are mapped (bff/notes/...)
+builder.Services.AddControllers();
 
 // Configure the authentication
 builder.Services.AddAuthentication(options =>
@@ -97,7 +101,7 @@ builder.Services.AddHttpClient("FastEndpoints", client =>
 });
 
 // Register Notes client proxy so server components can inject INotesClient
-builder.Services.AddScoped<INotesClient, Shadow.BlazorSpa.Bff.Services.NotesClientProxy>();
+builder.Services.AddScoped<Shadow.Shared.Services.INotesClient, Shadow.BlazorSpa.Bff.Services.NotesClientProxy>();
 
 var app = builder.Build();
 
@@ -122,7 +126,8 @@ app.UseAuthentication();
 app.UseBff();
 app.UseAuthorization();
 app.UseAntiforgery();
-
+// Map controller endpoints so proxy controller routes (e.g. /bff/notes/...) are available
+app.MapControllers();
 
 
 app.MapStaticAssets();

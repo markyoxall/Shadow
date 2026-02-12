@@ -1,6 +1,6 @@
 using System.Net.Http.Json;
-using Shadow.BlazorSpa.Client.Services;
-using Shadow.BlazorSpa.Client.Shared;
+using Shadow.Shared.Models;
+using Shadow.Shared.Services;
 
 namespace Shadow.BlazorSpa.Bff.Services;
 
