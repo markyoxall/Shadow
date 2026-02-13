@@ -49,9 +49,11 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        if (_forecasts is null)
+        // When running in the browser (WASM), call the client implementation to fetch forecasts
+        if (OperatingSystem.IsBrowser())
         {
             _forecasts = await WeatherClient.GetWeatherForecasts();
+            StateHasChanged();
         }
     }
 

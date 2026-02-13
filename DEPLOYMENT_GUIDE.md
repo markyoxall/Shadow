@@ -298,47 +298,9 @@ git remote -v
 **File**: `sync-repos.ps1`
 
 ```powershell
-param(
-    [Parameter(Mandatory=$true)]
-    [string]$CommitMessage
-)
-
-Write-Host "🔍 Checking for changes..." -ForegroundColor Cyan
-
-$changes = git status --porcelain
-if ([string]::IsNullOrWhiteSpace($changes)) {
-    Write-Host "✅ No changes to commit" -ForegroundColor Green
-    exit 0
-}
-
-Write-Host "📝 Staging all changes..." -ForegroundColor Cyan
-git add .
-
-Write-Host "💾 Committing changes..." -ForegroundColor Yellow
-git commit -m $CommitMessage
-
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "❌ Commit failed!" -ForegroundColor Red
-    exit 1
-}
-
-Write-Host "🚀 Pushing to GitHub..." -ForegroundColor Magenta
-git push github master
-
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "❌ GitHub push failed!" -ForegroundColor Red
-    exit 1
-}
-
-Write-Host "🚀 Pushing to Azure DevOps..." -ForegroundColor Magenta
-git push origin master
-
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "❌ Azure DevOps push failed!" -ForegroundColor Red
-    exit 1
-}
-
-Write-Host "✅ Successfully pushed to both repositories!" -ForegroundColor Green
+# See `sync-repos.ps1` in the repository root. The script stages, commits and pushes
+# the current branch to both `github` and `origin` remotes. It determines the current
+# branch automatically and exits if there are no changes to commit.
 ```
 
 **Usage:**

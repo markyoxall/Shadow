@@ -3,16 +3,19 @@ using Microsoft.AspNetCore.Mvc;
 using Orleans;
 using Shadow.FastEndpoints.Data;
 using Shadow.FastEndpoints.Orleans;
+using Shadow.FastEndpoints.Services;
 
 namespace Shadow.FastEndpoints.Endpoints;
 
 public class NotesEndpoint : EndpointWithoutRequest<Note>
 {
     private readonly IGrainFactory _grainFactory;
+    private readonly ICacheService _cache;
 
-    public NotesEndpoint(IGrainFactory grainFactory)
+    public NotesEndpoint(IGrainFactory grainFactory, ICacheService cache)
     {
         _grainFactory = grainFactory;
+        _cache = cache;
     }
 
     public override void Configure()
@@ -36,12 +39,14 @@ public class NotesEndpoint : EndpointWithoutRequest<Note>
 
         if (HttpContext.Request.Method == "GET")
         {
-            var note = await grain.GetAsync();
+            var cacheKey = $"notes:{id:D}";
+            var note = await _cache.TryGetOrRefreshAsync(cacheKey, async () => await grain.GetAsync(), TimeSpan.FromMinutes(10), refreshLockKey: $"refresh:notes:{id}");
             if (note == null)
             {
                 HttpContext.Response.StatusCode = 404;
                 return;
             }
+
             HttpContext.Response.ContentType = "application/json";
             await HttpContext.Response.WriteAsJsonAsync(note, cancellationToken: ct);
             return;
@@ -56,6 +61,9 @@ public class NotesEndpoint : EndpointWithoutRequest<Note>
             return;
         }
         await grain.SetAsync(noteReq);
+        // Evict cache so subsequent reads get fresh data
+        var evictKey = $"notes:{id:D}";
+        await _cache.RemoveAsync(evictKey);
         HttpContext.Response.ContentType = "application/json";
         await HttpContext.Response.WriteAsJsonAsync(noteReq, cancellationToken: ct);
     }

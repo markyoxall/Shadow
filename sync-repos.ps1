@@ -1,6 +1,9 @@
 # Sync to Both Repositories (Azure DevOps + GitHub)
 # Usage: .\sync-repos.ps1 "Your commit message"
 
+#!/usr/bin/env pwsh
+# Sync to Both Repositories (Azure DevOps + GitHub)
+# Usage: .\sync-repos.ps1 "Your commit message"
 param(
     [Parameter(Mandatory=$true)]
     [string]$CommitMessage

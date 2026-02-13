@@ -65,14 +65,24 @@ stages:
         mergeTestResults: true
         failTaskOnFailedTests: true
 
-    # Publish Blazor App
+    # Publish BFF (contains server-side BFF project)
     - task: DotNetCoreCLI@2
-      displayName: 'Publish Blazor App'
+      displayName: 'Publish BFF (Shadow.BlazorSpa.Bff)'
       inputs:
         command: 'publish'
         publishWebProjects: false
         projects: '**/Shadow.BlazorSpa.Bff/*.csproj'
         arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/blazor'
+        zipAfterPublish: true
+
+    # Publish Blazor WebAssembly client
+    - task: DotNetCoreCLI@2
+      displayName: 'Publish Blazor Client (Shadow.BlazorSpa.Client)'
+      inputs:
+        command: 'publish'
+        publishWebProjects: false
+        projects: '**/Shadow.BlazorSpa.Client/*.csproj'
+        arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/client'
         zipAfterPublish: true
 
     # Publish Azure Function
@@ -182,3 +192,4 @@ stages:
               appName: 'funkygibbon-func'
               package: '$(Pipeline.Workspace)/drop/function/**/*.zip'
               deploymentMethod: 'auto'
+

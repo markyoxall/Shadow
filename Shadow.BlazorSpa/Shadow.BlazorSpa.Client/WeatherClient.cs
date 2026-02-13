@@ -4,19 +4,30 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 /// <summary>
-/// this is an example of a class that would access the data via a web service. This is typically
-/// what you'd do in webassembly. 
-/// Note that it implements the same interface as the <see cref="ServerWeatherClient"/>
-/// when it's rendering on the server. 
+/// Client-side implementation used by Blazor WebAssembly. Retrieves forecasts via the local API
+/// and notifies the Azure Function. This class must be resolved on the client runtime.
 /// </summary>
-internal class WeatherClient(HttpClient client, IConfiguration configuration, ILogger<WeatherClient> logger) : IWeatherClient
+internal class WeatherClient : IWeatherClient
 {
+    private readonly HttpClient _client;
+    private readonly IConfiguration _configuration;
+    private readonly ILogger<WeatherClient> _logger;
+
+    public WeatherClient(HttpClient client, IConfiguration configuration, ILogger<WeatherClient> logger)
+    {
+        _client = client;
+        _configuration = configuration;
+        _logger = logger;
+    }
+
+    public string? LastCorrelationId { get; private set; }
+
     public async Task<WeatherForecast[]> GetWeatherForecasts()
     {
-        var forecasts = await client.GetFromJsonAsync<WeatherForecast[]>("WeatherForecast")
+        var forecasts = await _client.GetFromJsonAsync<WeatherForecast[]>("WeatherForecast")
                         ?? throw new JsonException("Failed to deserialize");
 
-        // Call Azure Function to log the weather fetch (don't wait for it to complete)
+        // Notify the Azure Function in background but capture correlation id if available
         _ = Task.Run(async () =>
         {
             try
@@ -25,7 +36,7 @@ internal class WeatherClient(HttpClient client, IConfiguration configuration, IL
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Background task failed to notify Azure Function");
+                _logger.LogError(ex, "Background task failed to notify Azure Function");
             }
         });
 
@@ -36,10 +47,10 @@ internal class WeatherClient(HttpClient client, IConfiguration configuration, IL
     {
         try
         {
-            var functionUrl = configuration["AzureFunction:WalkthroughUrl"];
+            var functionUrl = _configuration["AzureFunction:WalkthroughUrl"];
             if (string.IsNullOrWhiteSpace(functionUrl))
             {
-                logger.LogWarning("Azure Function URL not configured");
+                _logger.LogWarning("Azure Function URL not configured");
                 return;
             }
 
@@ -49,16 +60,28 @@ internal class WeatherClient(HttpClient client, IConfiguration configuration, IL
 
             if (response.IsSuccessStatusCode)
             {
-                logger.LogInformation("Azure Function notified successfully");
+                _logger.LogInformation("Azure Function notified successfully");
+                try
+                {
+                    var json = await response.Content.ReadFromJsonAsync<JsonElement>();
+                    if (json.ValueKind == JsonValueKind.Object && json.TryGetProperty("correlationId", out var cid))
+                    {
+                        LastCorrelationId = cid.GetString();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogDebug(ex, "Failed to read correlationId from function response");
+                }
             }
             else
             {
-                logger.LogWarning("Azure Function returned status: {StatusCode}", response.StatusCode);
+                _logger.LogWarning("Azure Function returned status: {StatusCode}", response.StatusCode);
             }
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to notify Azure Function");
+            _logger.LogError(ex, "Failed to notify Azure Function");
         }
     }
 }

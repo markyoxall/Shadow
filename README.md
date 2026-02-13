@@ -65,6 +65,16 @@ RESTful API implementation using FastEndpoints
 - **Pattern**: REPR (Request-Endpoint-Response) pattern
 - **Benefits**: Performance-optimized, minimal API boilerplate
 
+Note on APIs and databases:
+- The solution exposes APIs in multiple places:
+  - `Shadow.BlazorSpa.Bff` contains BFF-specific endpoints and proxy controllers (for example the `NotesProxyController`) intended to provide a secure, frontend-focused API surface and to host server-side rendering features. The BFF proxies requests to downstream APIs and is the recommended entry point for the Blazor client when authentication is required.
+  - `Shadow.FastEndpoints` contains the primary REST API surface (for example `NotesEndpoint`) and uses Orleans grains for state management in the notes sample. This project is intended as the main backend API that can be consumed by the BFF or other services.
+- The solution uses two database technologies by design:
+  - `Shadow.Identity` (Identity) uses a SQL-compatible EF Core store (configure via `ConnectionStrings:DefaultConnection` in that project). This typically maps to a SQL Server instance for ASP.NET Identity data.
+  - `Shadow.FastEndpoints` uses PostgreSQL for application data (configure via `ConnectionStrings:Postgres`). The FastEndpoints `ApplicationDbContext` is registered to use Npgsql when the Postgres connection string is present.
+
+When running locally, ensure both connection strings are configured (or adjust projects to use a single DB) and that the Postgres server is reachable when running the FastEndpoints project. The BFF typically proxies authenticated calls to the FastEndpoints API rather than querying databases directly.
+
 #### ☁️ Shadow.FunkyGibbon (Azure Functions)
 
 Serverless backend for asynchronous operations
@@ -170,6 +180,37 @@ Create `local.settings.json` in `Shadow.FunkyGibbon/` (not committed to Git):
   }
 }
 ```
+
+Note: local vs deployed configuration
+- For deployment to Azure you must set `AzureWebJobsStorage` (the full storage account connection string) and any other secrets in the Function App's Application settings (Azure Portal → Function App → Configuration → Application settings). These values will be used by the Function at runtime in Azure.
+- For local development you have two common options:
+  1. Use Azurite (recommended) — a local storage emulator. Set `AzureWebJobsStorage` to `UseDevelopmentStorage=true` (or use an explicit Azurite connection string) in `local.settings.json` or `appsettings.local.json`.
+  2. Point to a real Azure Storage account by placing its connection string in `local.settings.json` under `AzureWebJobsStorage` (useful when you need to test against real storage).
+
+Examples and tips
+- Using Azurite with the shorthand connection string (recommended):
+  - Start Azurite (choose one):
+    - npm: `npm i -g azurite` then run `azurite` in a terminal.
+    - Docker: `docker run -p 10000:10000 -p 10001:10001 -p 10002:10002 mcr.microsoft.com/azure-storage/azurite`
+  - In `local.settings.json` or `appsettings.local.json` set:
+    - `"AzureWebJobsStorage": "UseDevelopmentStorage=true"`
+  - The SDK will route blob operations to the local emulator ports (10000+).
+
+- Using an explicit Azurite connection string (optional):
+  - When required by tooling, use the explicit connection string below (Azurite defaults):
+    - `DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJ...;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;`
+  - Paste that into `AzureWebJobsStorage` in your local settings.
+
+- Using a real Azure Storage account for local testing:
+  - In Azure Portal → Storage Account → Access keys → copy the "Connection string" value and paste it into `local.settings.json` under `AzureWebJobsStorage`.
+
+Where to put local settings
+- `local.settings.json` (Functions Core Tools format) is the simplest choice for running locally with `func start`. This file is already ignored by `.gitignore`.
+- Alternatively you can create `Shadow.FunkyGibbon/appsettings.local.json` with a `Walkthrough` section. This project reads `Walkthrough:StorageConnection` and falls back to `AzureWebJobsStorage` if the Walkthrough section is missing.
+
+Verification
+- Start Azurite, run the function (`func start`), invoke the walkthrough endpoint and inspect the Azurite UI or connect with Azure Storage Explorer to confirm blobs are being uploaded.
+
 
 ---
 

@@ -3,6 +3,10 @@
 
 # Azure Functions localsettings file
 local.settings.json
+# Local appsettings files
+appsettings.local.json
+appsettings.*.local.json
+// Keep appsettings.Development.json tracked for a single canonical development config
 
 # User-specific files
 *.suo
