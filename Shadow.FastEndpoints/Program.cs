@@ -5,6 +5,11 @@ using Orleans.Configuration;
 using Orleans.Hosting;
 using Shadow.FastEndpoints.Data;
 using Shadow.FastEndpoints.Orleans;
+using Shadow.FastEndpoints.Services;
+using Microsoft.Extensions.Caching.Distributed;
+using Polly;
+using Polly.Extensions.Http;
+using StackExchange.Redis;
 
 namespace Shadow.FastEndpoints;
 
@@ -37,6 +42,34 @@ public class Program
 
         // FastEndpoints
         builder.Services.AddFastEndpoints();
+
+        // Distributed cache: prefer Redis (ConnectionStrings:Redis) with memory fallback
+        var redisConn = configuration.GetConnectionString("Redis") ?? configuration["ConnectionStrings:Redis"];
+        if (!string.IsNullOrWhiteSpace(redisConn))
+        {
+            builder.Services.AddStackExchangeRedisCache(opts =>
+            {
+                opts.Configuration = redisConn;
+            });
+            // Register ConnectionMultiplexer for advanced Redis operations (locks)
+            builder.Services.AddSingleton<StackExchange.Redis.IConnectionMultiplexer>(sp =>
+                StackExchange.Redis.ConnectionMultiplexer.Connect(redisConn));
+
+            Console.WriteLine("Using Redis distributed cache.");
+        }
+        else
+        {
+            builder.Services.AddDistributedMemoryCache();
+            Console.WriteLine("Redis not configured; using in-memory distributed cache as fallback.");
+        }
+
+        // Register cache service wrapper
+        builder.Services.AddSingleton<ICacheService, CacheService>();
+
+        // HttpClient with Polly resilience policies (example for external calls)
+        builder.Services.AddHttpClient("ResilientClient")
+            .AddTransientHttpErrorPolicy(p => p.WaitAndRetryAsync(new[] { TimeSpan.FromMilliseconds(200), TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(2) }))
+            .AddTransientHttpErrorPolicy(p => p.CircuitBreakerAsync(5, TimeSpan.FromSeconds(30)));
 
         // Orleans silo host (local development)
         builder.Host.UseOrleans((ctx, siloBuilder) =>

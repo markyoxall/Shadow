@@ -1,26 +1,32 @@
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+
 namespace Shadow.BlazorSpa;
 
-
 /// <summary>
-/// This is an example of a server-side class that accesses data from a datasource (IE: a database)
-/// and makes it available to the application. On the server, the component can directly access the database,
-/// whereas on the client, the component needs to go via a HTTP Client. See the <see cref="WeatherClient"/>
+/// Server-side implementation that returns synthetic forecasts. It does not call the Azure Function.
 /// </summary>
-internal class ServerWeatherClient() : IWeatherClient
+internal class ServerWeatherClient : IWeatherClient
 {
+    // Server implementation does not set a correlation id.
+    public string? LastCorrelationId { get; } = null;
+
     public Task<WeatherForecast[]> GetWeatherForecasts()
     {
         var startDate = DateOnly.FromDateTime(DateTime.Now);
-        return Task.FromResult(Enumerable.Range(1, 5).Select(index => new WeatherForecast
+        var results = Enumerable.Range(1, 5).Select(index => new WeatherForecast
         {
             Date = startDate.AddDays(index),
             TemperatureC = Random.Shared.Next(-20, 55),
             Summary = Summaries[Random.Shared.Next(Summaries.Length)]
-        }).ToArray());
+        }).ToArray();
+
+        return Task.FromResult(results);
     }
 
-    private static readonly string[] Summaries =
-    [
+    private static readonly string[] Summaries = new[]
+    {
         "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-    ];
+    };
 }

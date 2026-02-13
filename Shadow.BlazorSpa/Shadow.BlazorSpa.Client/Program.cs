@@ -20,9 +20,9 @@ builder.Services.AddFluxor(options =>
     // options.UseReduxDevTools();
 });
 
-builder.Services.AddSingleton<IWeatherClient>(sp => sp.GetRequiredService<WeatherClient>());
-
+// Register the typed HttpClient for the WeatherClient first, then expose it as the IWeatherClient.
 builder.Services.AddLocalApiHttpClient<WeatherClient>();
+builder.Services.AddScoped<IWeatherClient>(sp => sp.GetRequiredService<WeatherClient>());
 
 // Register Notes client that talks to the BFF proxy
 // Notes client registered - uses the BFF proxy via Local API

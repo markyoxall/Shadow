@@ -5,4 +5,5 @@
 public interface IWeatherClient
 {
     Task<WeatherForecast[]> GetWeatherForecasts();
+    string? LastCorrelationId { get; }
 }
