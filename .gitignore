@@ -374,3 +374,9 @@ MigrationBackup/
 FodyWeavers.xsd
 /.vscode
 **/Shadow.FunkyGibbon/local.settings.json
+
+# Backup and local artifact patterns
+.git_backup*
+**/__azurite_db*.json
+**/__blobstorage__/
+**/__blobstorage__/*

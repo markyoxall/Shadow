@@ -14,7 +14,8 @@ USAGE:
 WARNING: This rewrites local git metadata. Keep backups of .git if you need history.
 #>
 param(
-    [string]$RemoteUrl = ''
+    [string]$RemoteUrl = '',
+    [switch]$AutoConfirm
 )
 
 function Ensure-GitIgnoreEntry([string]$pattern) {
@@ -30,8 +31,12 @@ function Ensure-GitIgnoreEntry([string]$pattern) {
 }
 
 Write-Host "This script will remove local Git metadata and create a fresh repository."
-$ok = Read-Host "Type 'YES' to continue"
-if ($ok -ne 'YES') { Write-Host 'Aborted.'; exit 1 }
+if (-not $AutoConfirm) {
+    $ok = Read-Host "Type 'YES' to continue"
+    if ($ok -ne 'YES') { Write-Host 'Aborted.'; exit 1 }
+} else {
+    Write-Host "Auto-confirm enabled; proceeding without prompt."
+}
 
 # Backup .git if present
 $gitDir = Join-Path (Get-Location) '.git'
@@ -78,4 +83,7 @@ if ($RemoteUrl -ne '') {
     if ($LASTEXITCODE -ne 0) { Write-Warning "Failed to add remote. You can add it manually later." }
 }
 
-Write-Host "Done. Local git metadata replaced. Review `.gitignore` and verify no secrets are staged.`nYou can now push to your remote with:`n  git push -u origin master`n(Replace origin/master as appropriate.)"
+Write-Host "Done. Local git metadata replaced. Review .gitignore and verify no secrets are staged."
+Write-Host "You can now push to your remote with:"
+Write-Host "  git push -u origin master"
+Write-Host "(Replace origin/master as appropriate.)"
