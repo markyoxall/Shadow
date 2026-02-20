@@ -1,0 +1,58 @@
+@page "/notes"
+@inject Shadow.Shared.Services.INotesClient NotesClient
+@using Shadow.Shared.Models
+@rendermode InteractiveWebAssembly
+
+<PageTitle>Notes</PageTitle>
+
+<h1>Notes</h1>
+
+<p>Enter an ID to fetch or create a note.</p>
+
+<input @bind="_idString" placeholder="GUID (leave blank to create new)" />
+<button @onclick="FetchNote">Fetch</button>
+<button @onclick="CreateNew">New</button>
+
+@if (_note != null)
+{
+    <div>
+        <label>Title</label>
+        <input @bind="_note.Title" />
+        <label>Content</label>
+        <textarea @bind="_note.Content"></textarea>
+        <p>Created: @_note.CreatedAt</p>
+        <button @onclick="Save">Save</button>
+        <button @onclick="Delete">Delete</button>
+    </div>
+}
+
+@code {
+    private string? _idString;
+    private Note? _note;
+
+    private async Task FetchNote()
+    {
+        if (!Guid.TryParse(_idString, out var id)) return;
+        _note = await NotesClient.GetAsync(id);
+    }
+
+    private void CreateNew()
+    {
+        _note = new Note { Id = Guid.NewGuid(), Title = "", Content = "", CreatedAt = DateTime.UtcNow };
+        _idString = _note.Id.ToString();
+    }
+
+    private async Task Save()
+    {
+        if (_note == null) return;
+        var saved = await NotesClient.SaveAsync(_note.Id, _note);
+        if (saved != null) _note = saved;
+    }
+
+    private async Task Delete()
+    {
+        if (_note == null) return;
+        await NotesClient.DeleteAsync(_note.Id);
+        _note = null;
+    }
+}

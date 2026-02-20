@@ -1,0 +1,60 @@
+@page "/weather"
+@using Microsoft.AspNetCore.Authorization
+@inject IWeatherClient WeatherClient
+@rendermode InteractiveWebAssembly
+
+@attribute [Authorize]
+
+<PageTitle>Weather</PageTitle>
+
+<h1>Weather</h1>
+
+<p>This component demonstrates showing data.</p>
+<p style="color:red;font-weight:bold">
+    Rendering mode: @(OperatingSystem.IsBrowser() ? "WASM" : "Server")
+</p>
+@if (_forecasts == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Temp. (C)</th>
+                <th>Temp. (F)</th>
+                <th>Summary</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var forecast in _forecasts)
+            {
+                <tr>
+                    <td>@forecast.Date.ToShortDateString()</td>
+                    <td>@forecast.TemperatureC</td>
+                    <td>@forecast.TemperatureF</td>
+                    <td>@forecast.Summary</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+
+    [PersistentState(AllowUpdates = true)]
+    public WeatherForecast[]? _forecasts { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // When running in the browser (WASM), call the client implementation to fetch forecasts
+        if (OperatingSystem.IsBrowser())
+        {
+            _forecasts = await WeatherClient.GetWeatherForecasts();
+            StateHasChanged();
+        }
+    }
+
+}

@@ -1,0 +1,30 @@
+<Solution>
+  <Folder Name="/docs/">
+    <File Path="DEPLOYMENT_GUIDE.md" />
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/endpoints/">
+    <Project Path="Shadow.FastEndpoints/Shadow.FastEndpoints.csproj" />
+  </Folder>
+  <Folder Name="/functions/">
+    <Project Path="Shadow.FunkyGibbon/Shadow.FunkyGibbon.csproj" Id="20a5e836-0703-4ada-b24c-2a3fb86f82ef" />
+  </Folder>
+  <Folder Name="/presentation/" />
+  <Folder Name="/presentation/Blazor/">
+    <Project Path="Shadow.BlazorSpa/Shadow.BlazorSpa.Bff/Shadow.BlazorSpa.Bff.csproj" />
+    <Project Path="Shadow.BlazorSpa/Shadow.BlazorSpa.Client/Shadow.BlazorSpa.Client.csproj" />
+  </Folder>
+  <Folder Name="/security/">
+    <Project Path="Shadow.Identity/Shadow.Identity.csproj" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path="azure-pipelines.yml" />
+    <File Path="sync-repos.ps1" />
+  </Folder>
+  <Folder Name="/test/">
+    <Project Path="Shadow.BlazorSpa/Shadow.BlazorSpa.Tests/Shadow.BlazorSpa.Tests.csproj" />
+    <Project Path="Shadow.FunkyGibbon.Tests/Shadow.FunkyGibbon.Tests.csproj" />
+  </Folder>
+  <Project Path="Shadow.Aspiration/Shadow.Aspiration.AppHost/Shadow.Aspiration.AppHost.csproj" Id="c794fa6d-c603-40a2-8be7-a4286aaf8464" />
+  <Project Path="Shadow.Aspiration/Shadow.Aspiration.ServiceDefaults/Shadow.Aspiration.ServiceDefaults.csproj" />
+</Solution>

@@ -1,0 +1,20 @@
+# Repo-wide ignores for local secrets and tools
+**/local.settings.json
+**/appsettings.local.json
+**/appsettings.*.local.json
+**/secrets.json
+*.secret
+.env
+
+# OS and IDE
+.vs/
+.idea/
+*.suo
+*.user
+
+# Build
+bin/
+obj/
+
+# Node
+node_modules/
