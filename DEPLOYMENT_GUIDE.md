@@ -33,7 +33,7 @@ The Shadow project demonstrates a modern .NET 10 portfolio application with:
 - .NET 10 SDK
 - Visual Studio 2025
 - Azure Functions Core Tools
-- Git with dual-repository setup
+- Git with a GitHub remote
 - Azure subscription
 
 ---
@@ -264,33 +264,25 @@ has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is pres
 
 ## 7. Repository Setup
 
-### 7.1 Dual-Repository Strategy
+### 7.1 Single Repository (GitHub)
 
-**Problem**: Azure DevOps doesn't have easy public project toggle
+This project is hosted on GitHub. The GitHub repository is the single source of truth for the code and should be used for all pushes and collaboration.
 
-**Solution**: Dual repository approach
-- **Azure DevOps** (Private): Primary working repository for development
-  - `https://dev.azure.com/markyoxall65/Shadowland/_git/Shadow`
-- **GitHub** (Public): Portfolio showcase for employers
-  - `https://github.com/markyoxall/Shadow`
+- **GitHub (public)**: `https://github.com/markyoxall/Shadow`
 
 ### 7.2 Git Remote Configuration
 
-```bash
-# Azure DevOps (origin)
-git remote add origin https://dev.azure.com/markyoxall65/Shadowland/_git/Shadow
+Add the GitHub remote as `origin` (or use another remote name if you prefer):
 
-# GitHub (github)
-git remote add github https://github.com/markyoxall/Shadow.git
+```bash
+git remote add origin https://github.com/markyoxall/Shadow.git
 ```
 
 **Verification:**
 ```bash
 git remote -v
-# origin   https://dev.azure.com/markyoxall65/Shadowland/_git/Shadow (fetch)
-# origin   https://dev.azure.com/markyoxall65/Shadowland/_git/Shadow (push)
-# github   https://github.com/markyoxall/Shadow.git (fetch)
-# github   https://github.com/markyoxall/Shadow.git (push)
+# origin   https://github.com/markyoxall/Shadow.git (fetch)
+# origin   https://github.com/markyoxall/Shadow.git (push)
 ```
 
 ### 7.3 Automation Script
@@ -298,9 +290,9 @@ git remote -v
 **File**: `sync-repos.ps1`
 
 ```powershell
-# See `sync-repos.ps1` in the repository root. The script stages, commits and pushes
-# the current branch to both `github` and `origin` remotes. It determines the current
-# branch automatically and exits if there are no changes to commit.
+# The `sync-repos.ps1` helper stages, commits and pushes the current branch
+# to the configured GitHub remote. Update the script or remote names if you
+# prefer to push directly to `origin` instead of the `github` remote.
 ```
 
 **Usage:**
@@ -309,7 +301,7 @@ git remote -v
 ```
 
 **Benefits:**
-- Single command to commit to both repositories
+- Single command to commit and push to GitHub
 - Colored output for easy status tracking
 - Error handling with exit codes
 - Checks for changes before committing
@@ -415,33 +407,33 @@ Stage 4: DeployProduction (After staging deployment)
 ```
 
 ### 8.4 Pipeline Setup Process
+**How to run the pipeline**
 
-**Step 1: Connect to GitHub**
-1. Azure DevOps → Pipelines → New Pipeline
-2. Select "GitHub" (not GitHub Enterprise)
-3. Authorize Azure Pipelines OAuth app
-4. Select `markyoxall/Shadow` repository
-5. Azure creates webhook automatically
+Option A — Use Azure Pipelines (existing `azure-pipelines.yml`)
 
-**Step 2: Select YAML File**
-1. Choose "Existing Azure Pipelines YAML file"
-2. Branch: `master`
-3. Path: `/azure-pipelines.yml`
-4. Review and Run
+1. In Azure DevOps create a new pipeline and point it to this GitHub repository.
+2. Select "Existing Azure Pipelines YAML file" and pick `/azure-pipelines.yml`.
+3. Recreate any required service connections/environments (for example `Azure-Shadow-Production`) and grant permissions.
 
-**Step 3: Create Service Connection**
+Option B — Use GitHub Actions (recommended)
 
-**Initial Attempt**: Manual creation showed "App registration" (manual path)
+This repository includes a GitHub Actions workflow at `.github/workflows/ci-cd.yml`. The workflow will run on pushes to `master`, `main`, `staging`, `develop` and `test` branches and performs build, test, artifact publish and conditional deployments.
 
-**Solution**: Let pipeline create automatically on first run
-1. Run pipeline
-2. Wait for deployment stage
-3. Click "Permit" when prompted
-4. Select Azure subscription
-5. Service connection created: `Azure-Shadow-Production`
+Required GitHub repository secrets (Settings → Secrets → Actions):
 
-**Issue Encountered**: Service connection initially referenced wrong subscription
+- `AZURE_CREDENTIALS` — service principal JSON used by `azure/login` (see Azure docs to create a service principal and generate credentials)
+- `AZURE_RESOURCE_GROUP` — Azure resource group containing your Function App(s)
+- `FUNCTIONAPP_NAME_TEST` — test function app name (e.g. `funkygibbon-test`)
+- `FUNCTIONAPP_NAME_STAGING` — staging function app name
+- `FUNCTIONAPP_NAME_PROD` — production function app name (e.g. `funkygibbon-func`)
 
+Optional secrets (for Blazor hosting):
+
+- `BLAZOR_APP_NAME` or `AZURE_STATIC_WEB_APP_TOKEN` — if you deploy the client to a Web App or Static Web App, provide the required secret/token and update the workflow step accordingly.
+
+Notes:
+- The GitHub Actions workflow uses `az functionapp deployment source config-zip` to deploy the zipped function package. Ensure the service principal in `AZURE_CREDENTIALS` has `Contributor` (or appropriate) access to the target resource group.
+- If you prefer Azure Pipelines, the `azure-pipelines.yml` file remains in the repo and can be used after re-creating the Azure DevOps pipeline and service connections.
 **Resolution**:
 1. Azure DevOps → Project Settings → Service Connections
 2. Edit `Azure-Shadow-Production`
@@ -585,7 +577,7 @@ dotnet test
 
 **Azure Function:**
 - ✅ **Live URL**: https://funkygibbon-func-apdgf3gycegeates.ukwest-01.azurewebsites.net/api/walkthrough
-- ✅ **Auto-deployed** via Azure Pipelines
+- ✅ **Auto-deployed** via the configured CI/CD pipeline
 - ✅ **Email notifications** working (Gmail)
 - ✅ **Blob storage** persisting files
 - ✅ **CORS** configured for localhost
@@ -828,14 +820,14 @@ curl https://funkygibbon-func-apdgf3gycegeates.ukwest-01.azurewebsites.net/api/w
 - [Duende BFF](https://docs.duendesoftware.com/identityserver/v6/bff/)
 - [Blazor](https://docs.microsoft.com/aspnet/core/blazor/)
 
+
 **Project URLs:**
 - **GitHub**: https://github.com/markyoxall/Shadow
-- **Azure DevOps**: https://dev.azure.com/markyoxall65/Shadowland
 - **Azure Function**: https://funkygibbon-func-apdgf3gycegeates.ukwest-01.azurewebsites.net/api/walkthrough
 
 **Configuration Files:**
-- `azure-pipelines.yml` - CI/CD pipeline definition
-- `sync-repos.ps1` - Dual repository automation
+- `azure-pipelines.yml` - CI/CD pipeline definition (keeps pipeline config; set up in your CI provider)
+- `sync-repos.ps1` - Helper script to commit and push to GitHub
 - `local.settings.json` - Local Azure Function settings (gitignored)
 - `Shadow.BlazorSpa.Client/wwwroot/appsettings.json` - Client configuration
 

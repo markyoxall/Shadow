@@ -141,7 +141,7 @@ public class Functions
                 try
                 {
                     object? bodyObj = response.Body;
-                    if (bodyObj is System.Net.Http.HttpContent httpContent)
+                    if (bodyObj is HttpContent httpContent)
                     {
                         sgBody = await httpContent.ReadAsStringAsync();
                     }

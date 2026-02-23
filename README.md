@@ -132,7 +132,7 @@ Serverless backend for asynchronous operations
 
 1. **Clone the repository**
    ```bash
-   git clone https://dev.azure.com/markyoxall65/Shadowland/_git/Shadow
+   git clone https://github.com/markyoxall/Shadow.git
    cd Shadow
    ```
 
@@ -301,7 +301,7 @@ This project demonstrates proficiency in:
 ## 📞 Contact
 
 **Developer**: Mark Yoxall  
-**Repository**: [Azure DevOps - Shadowland](https://dev.azure.com/markyoxall65/Shadowland/_git/Shadow)  
+**Repository**: [GitHub - Shadow](https://github.com/markyoxall/Shadow)  
 **Email**: mark.yoxall65@gmail.com
 
 ---

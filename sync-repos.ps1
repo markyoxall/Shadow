@@ -1,15 +1,12 @@
-# Sync to Both Repositories (Azure DevOps + GitHub)
-# Usage: .\sync-repos.ps1 "Your commit message"
-
 #!/usr/bin/env pwsh
-# Sync to Both Repositories (Azure DevOps + GitHub)
+# Sync to GitHub only
 # Usage: .\sync-repos.ps1 "Your commit message"
 param(
     [Parameter(Mandatory=$true)]
     [string]$CommitMessage
 )
 
-Write-Host "🔄 Syncing changes to both repositories..." -ForegroundColor Cyan
+Write-Host "🔄 Syncing changes to GitHub..." -ForegroundColor Cyan
 Write-Host ""
 
 # Check if there are changes to commit
@@ -41,9 +38,11 @@ Write-Host ""
 Write-Host "✅ Committed successfully!" -ForegroundColor Green
 Write-Host ""
 
-# Push to GitHub first (triggers CI/CD pipeline)
-Write-Host "🚀 Pushing to GitHub (triggers pipeline)..." -ForegroundColor Yellow
-git push github master
+# Determine current branch and push to GitHub remote
+Write-Host "🚀 Pushing to GitHub (remote: 'github')..." -ForegroundColor Yellow
+$branch = git rev-parse --abbrev-ref HEAD
+if ($LASTEXITCODE -ne 0) { $branch = 'master' }
+git push github $branch
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "❌ Failed to push to GitHub" -ForegroundColor Red
@@ -52,20 +51,6 @@ if ($LASTEXITCODE -ne 0) {
 
 Write-Host "✅ Pushed to GitHub!" -ForegroundColor Green
 Write-Host ""
-
-# Push to Azure DevOps (backup, no pipeline trigger)
-Write-Host "🚀 Pushing to Azure DevOps (backup)..." -ForegroundColor Yellow
-git push origin master
-
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "❌ Failed to push to Azure DevOps" -ForegroundColor Red
-    Write-Host "⚠️  Changes were committed and pushed to GitHub, but Azure DevOps sync failed." -ForegroundColor Yellow
-    exit 1
-}
-
-Write-Host "✅ Pushed to GitHub!" -ForegroundColor Green
+Write-Host "🎉 All done! Changes committed and pushed to GitHub." -ForegroundColor Green
 Write-Host ""
-Write-Host "🎉 All done! Changes synced to both repositories." -ForegroundColor Green
-Write-Host ""
-Write-Host "Azure DevOps: https://dev.azure.com/markyoxall65/Shadowland/_git/Shadow" -ForegroundColor Cyan
-Write-Host "GitHub:       https://github.com/markyoxall/Shadow" -ForegroundColor Cyan
+Write-Host "GitHub: https://github.com/markyoxall/Shadow" -ForegroundColor Cyan

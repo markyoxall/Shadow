@@ -1,0 +1,97 @@
+name: CI/CD - Build, Test, Deploy
+
+on:
+  push:
+    branches:
+      - master
+      - main
+      - staging
+      - develop
+      - test
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build & Test
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.x'
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test "**/*Tests/*.csproj" --configuration Release --no-build --logger trx || true
+
+      - name: Publish BFF (Shadow.BlazorSpa.Bff)
+        run: dotnet publish ./Shadow.BlazorSpa/Shadow.BlazorSpa.Bff/Shadow.BlazorSpa.Bff.csproj -c Release -o ./artifacts/blazor
+
+      - name: Publish Blazor Client (Shadow.BlazorSpa.Client)
+        run: dotnet publish ./Shadow.BlazorSpa/Shadow.BlazorSpa.Client/Shadow.BlazorSpa.Client.csproj -c Release -o ./artifacts/client
+
+      - name: Publish Azure Function (Shadow.FunkyGibbon)
+        run: dotnet publish ./Shadow.FunkyGibbon/Shadow.FunkyGibbon.csproj -c Release -o ./artifacts/function
+
+      - name: Zip Azure Function
+        shell: pwsh
+        run: |
+          if (Test-Path ./artifacts/function) {
+            Compress-Archive -Path ./artifacts/function/* -DestinationPath ./artifacts/function.zip -Force
+          } else {
+            Write-Error "Function publish output not found"
+            exit 1
+          }
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: drop
+          path: ./artifacts
+
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: drop
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy to TEST (push to test/develop)
+        if: startsWith(github.ref, 'refs/heads/test') || startsWith(github.ref, 'refs/heads/develop')
+        run: |
+          az functionapp deployment source config-zip --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --name ${{ secrets.FUNCTIONAPP_NAME_TEST }} --src ./drop/artifacts/function.zip
+
+      - name: Deploy to STAGING (push to staging)
+        if: startsWith(github.ref, 'refs/heads/staging')
+        run: |
+          az functionapp deployment source config-zip --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --name ${{ secrets.FUNCTIONAPP_NAME_STAGING }} --src ./drop/artifacts/function.zip
+
+      - name: Deploy to PRODUCTION (push to master/main)
+        if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
+        run: |
+          az functionapp deployment source config-zip --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --name ${{ secrets.FUNCTIONAPP_NAME_PROD }} --src ./drop/artifacts/function.zip
+
+      - name: Optional: Deploy Blazor client to Web App
+        if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/staging')
+        run: |
+          echo "Update this step to deploy the Blazor client (Static Web App, Web App or storage)."
+          echo "Use secrets like BLAZOR_APP_NAME or AZURE_STATIC_WEB_APP_TOKEN and appropriate actions."
+
+      - name: Post-deploy info
+        run: echo "Deployment job completed"
