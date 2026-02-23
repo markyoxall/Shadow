@@ -1,13 +1,6 @@
 name: CI/CD - Build, Test, Deploy
 
 on:
-  push:
-    branches:
-      - master
-      - main
-      - staging
-      - develop
-      - test
   workflow_dispatch:
 
 jobs:

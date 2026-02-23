@@ -6,12 +6,22 @@ trigger:
     include:
       - master
       - main
+      - test
+      - staging
+      - develop
 
 pool:
   vmImage: 'windows-latest'
 
 variables:
   buildConfiguration: 'Release'
+  azureServiceConnectionTest: 'Azure-Shadow-Test'
+  azureServiceConnectionStaging: 'Azure-Shadow-Staging'
+  azureServiceConnectionProd: 'Azure-Shadow-Production'
+  functionAppTest: 'funkygibbon-test'
+  functionAppStaging: 'funkygibbon-staging'
+  functionAppProd: 'funkygibbon-func'
+  resourceGroup: 'your-resource-group'
 
 stages:
 # ═══════════════════════════════════════════════════════════
@@ -109,7 +119,7 @@ stages:
 - stage: DeployTest
   displayName: 'Deploy to Test'
   dependsOn: BuildAndTest
-  condition: succeeded()
+  condition: and(succeeded(), or(eq(variables['Build.SourceBranch'], 'refs/heads/test'), eq(variables['Build.SourceBranch'], 'refs/heads/develop')))
   jobs:
   - deployment: DeployTestEnvironment
     displayName: 'Deploy to Test Environment'
@@ -123,15 +133,14 @@ stages:
               echo "Function URL: https://funkygibbon-test.azurewebsites.net"
               echo "⚠️ Configure Azure resources first!"
             displayName: 'Test Deployment Info'
-
-          # TODO: Uncomment when Test Azure resources are ready
-          # - task: AzureFunctionApp@1
-          #   displayName: 'Deploy Function to Test'
-          #   inputs:
-          #     azureSubscription: 'YOUR_AZURE_SUBSCRIPTION'
-          #     appType: 'functionApp'
-          #     appName: 'funkygibbon-test'
-          #     package: '$(Pipeline.Workspace)/drop/function/**/*.zip'
+          - task: AzureFunctionApp@1
+            displayName: 'Deploy Function to Test'
+            inputs:
+              azureSubscription: '$(azureServiceConnectionTest)'
+              appType: 'functionApp'
+              appName: '$(functionAppTest)'
+              package: '$(Pipeline.Workspace)/drop/function/**/*.zip'
+              deploymentMethod: 'auto'
 
 # ═══════════════════════════════════════════════════════════
 # STAGE 3: DEPLOY TO STAGING
@@ -139,7 +148,7 @@ stages:
 - stage: DeployStaging
   displayName: 'Deploy to Staging'
   dependsOn: DeployTest
-  condition: succeeded()
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/staging'))
   jobs:
   - deployment: DeployStagingEnvironment
     displayName: 'Deploy to Staging Environment'
@@ -153,15 +162,14 @@ stages:
               echo "Function URL: https://funkygibbon-staging.azurewebsites.net"
               echo "⚠️ Configure Azure resources first!"
             displayName: 'Staging Deployment Info'
-
-          # TODO: Uncomment when Staging Azure resources are ready
-          # - task: AzureFunctionApp@1
-          #   displayName: 'Deploy Function to Staging'
-          #   inputs:
-          #     azureSubscription: 'YOUR_AZURE_SUBSCRIPTION'
-          #     appType: 'functionApp'
-          #     appName: 'funkygibbon-staging'
-          #     package: '$(Pipeline.Workspace)/drop/function/**/*.zip'
+          - task: AzureFunctionApp@1
+            displayName: 'Deploy Function to Staging'
+            inputs:
+              azureSubscription: '$(azureServiceConnectionStaging)'
+              appType: 'functionApp'
+              appName: '$(functionAppStaging)'
+              package: '$(Pipeline.Workspace)/drop/function/**/*.zip'
+              deploymentMethod: 'auto'
 
 # ═══════════════════════════════════════════════════════════
 # STAGE 4: DEPLOY TO PRODUCTION
@@ -169,7 +177,7 @@ stages:
 - stage: DeployProduction
   displayName: 'Deploy to Production'
   dependsOn: DeployStaging
-  condition: succeeded()
+  condition: and(succeeded(), or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), eq(variables['Build.SourceBranch'], 'refs/heads/main')))
   jobs:
   - deployment: DeployProductionEnvironment
     displayName: 'Deploy to Production Environment'
@@ -187,9 +195,9 @@ stages:
           - task: AzureFunctionApp@1
             displayName: 'Deploy Function to Production'
             inputs:
-              azureSubscription: 'Azure-Shadow-Production'
+              azureSubscription: '$(azureServiceConnectionProd)'
               appType: 'functionApp'
-              appName: 'funkygibbon-func'
+              appName: '$(functionAppProd)'
               package: '$(Pipeline.Workspace)/drop/function/**/*.zip'
               deploymentMethod: 'auto'
 

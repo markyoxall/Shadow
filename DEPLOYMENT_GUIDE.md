@@ -830,6 +830,7 @@ curl https://funkygibbon-func-apdgf3gycegeates.ukwest-01.azurewebsites.net/api/w
 - `sync-repos.ps1` - Helper script to commit and push to GitHub
 - `local.settings.json` - Local Azure Function settings (gitignored)
 - `Shadow.BlazorSpa.Client/wwwroot/appsettings.json` - Client configuration
+ - `scripts/create-azure-resources.ps1` - PowerShell helper to create Azure resources and a service principal for CI/CD
 
 ---
 
