@@ -16,8 +16,8 @@ pool:
 variables:
   buildConfiguration: 'Release'
   azureServiceConnectionTest: 'Azure-Shadow-Test'
-  azureServiceConnectionStaging: 'Azure-Shadow-Staging'
-  azureServiceConnectionProd: 'Azure-Shadow-Production'
+  azureServiceConnectionStaging: 'Azure-Shadow-Test'
+  azureServiceConnectionProd: 'Azure-Shadow-Test'
   functionAppTest: 'funkygibbon-test'
   functionAppStaging: 'funkygibbon-staging'
   functionAppProd: 'funkygibbon-func'
